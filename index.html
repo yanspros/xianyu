@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="良研运营台">
+<title>良研代码小铺 · 闲鱼运营指挥台</title>
+<style>
+  :root {
+    --bg: #F5F2EB;
+    --surface: #FFFFFF;
+    --surface-alt: #EFECE3;
+    --ink: #1A1917;
+    --ink-sub: #5E5A52;
+    --ink-muted: #8E887E;
+    --line: #E0DACD;
+    --green: #166846;
+    --green-soft: #E7F3EC;
+    --amber: #B4690E;
+    --amber-soft: #FDF3E1;
+    --red: #B83227;
+    --red-soft: #FBEAE8;
+    --gold: #EAB308;
+    --shadow-sm: 0 2px 10px rgba(26, 25, 23, 0.05);
+    --shadow-md: 0 8px 26px rgba(26, 25, 23, 0.08);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: var(--ink);
+    width: 100%; max-width: 100vw; overflow-x: hidden;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(104px + env(safe-area-inset-bottom));
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  main, section, header, div { min-width: 0; }
+
+  /* 顶部品牌指挥栏 */
+  .app-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 4px 2px 14px;
+    border-bottom: 1.5px solid var(--ink);
+    margin-bottom: 14px;
+  }
+  .brand-kicker {
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 11px; letter-spacing: 1.4px; color: var(--ink-muted); font-weight: 700;
+    text-transform: uppercase;
+  }
+  .brand-title {
+    font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: -0.4px; margin-top: 2px;
+  }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .status-text {
+    font-size: 12px; font-weight: 800; color: var(--green);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .freebies-link {
+    font-size: 12px; font-weight: 700; color: var(--amber); text-decoration: none;
+    border-bottom: 1px dashed var(--amber); padding-bottom: 1px;
+  }
+
+  /* 仅电脑端展示扫码引导 */
+  .qr-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 14px;
+    margin-bottom: 14px; box-shadow: var(--shadow-sm);
+  }
+  .qr-card img { width: 82px; height: 82px; border-radius: 10px; border: 1px solid var(--line); flex-shrink: 0; }
+  .qr-info b { font-size: 14px; color: var(--ink); display: block; margin-bottom: 3px; }
+  .qr-info p { font-size: 12.5px; color: var(--ink-sub); line-height: 1.5; }
+  .qr-info a { color: var(--green); font-weight: 800; text-decoration: none; }
+  @media (max-width: 640px) { .qr-card { display: none; } }
+
+  /* 每日防扫脸 30 秒打卡条（可折叠 + 本地记忆） */
+  .daily-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 13px 14px;
+    margin-bottom: 14px; box-shadow: var(--shadow-sm);
+  }
+  .daily-head {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; user-select: none;
+  }
+  .daily-head-l { display: flex; align-items: center; gap: 8px; }
+  .daily-title { font-size: 14px; font-weight: 800; color: var(--ink); }
+  .daily-prog {
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 12px; font-weight: 800; color: var(--green);
+    background: var(--green-soft); padding: 2px 8px; border-radius: 6px;
+  }
+  .daily-toggle { font-size: 12px; color: var(--ink-muted); font-weight: 700; }
+  .daily-list { margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
+  .daily-list.collapsed { display: none; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 10px; background: var(--bg);
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .check-item.done { background: var(--green-soft); color: var(--green); text-decoration: line-through; opacity: 0.85; }
+  .check-box {
+    width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--ink-muted);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 13px; font-weight: 900; color: #fff; background: #fff;
+  }
+  .check-item.done .check-box { background: var(--green); border-color: var(--green); }
+
+  /* 面板切换 */
+  .pane { display: none; }
+  .pane.active { display: block; animation: fadeIn 0.18s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Day 1 ~ Day 4 分段控制器 */
+  .day-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+    margin-bottom: 14px;
+  }
+  .day-pill {
+    background: var(--surface); border: 1.5px solid var(--line);
+    border-radius: 12px; padding: 9px 4px; text-align: center;
+    cursor: pointer; position: relative; transition: all 0.15s ease;
+  }
+  .day-pill .dp-top { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .day-pill .dp-sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; font-weight: 600; }
+  .day-pill.active {
+    background: var(--ink); border-color: var(--ink);
+    box-shadow: var(--shadow-md);
+  }
+  .day-pill.active .dp-top { color: #FFFFFF; }
+  .day-pill.active .dp-sub { color: #EAB308; }
+  .day-pill.completed::after {
+    content: "已改"; position: absolute; top: -6px; right: -4px;
+    background: var(--green); color: #fff; font-size: 9.5px; font-weight: 800;
+    padding: 1px 5px; border-radius: 5px;
+  }
+
+  /* 商品主操作卡片 */
+  .listing-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-md);
+  }
+  .lc-banner {
+    padding: 15px 16px; background: var(--surface-alt);
+    border-bottom: 1px solid var(--line);
+  }
+  .lc-meta-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .track-tag {
+    font-size: 11.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+  }
+  .track-rescue { background: var(--red-soft); color: var(--red); }
+  .track-money { background: var(--green-soft); color: var(--green); }
+  .track-ai { background: var(--amber-soft); color: var(--amber); }
+
+  .done-toggle-btn {
+    background: #fff; border: 1px solid var(--line); color: var(--ink-sub);
+    font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+  }
+  .done-toggle-btn.is-done { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .lc-target {
+    font-size: 17px; font-weight: 900; color: var(--ink); line-height: 1.38;
+  }
+  .lc-price-lock {
+    margin-top: 8px; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700; color: var(--red);
+    background: var(--red-soft); padding: 7px 10px; border-radius: 9px;
+  }
+
+  .lc-section {
+    padding: 15px 16px; border-bottom: 1px solid var(--line);
+  }
+  .lc-section:last-child { border-bottom: none; }
+  .sec-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }
+  .sec-label {
+    font-size: 14px; font-weight: 900; color: var(--ink);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .sec-num {
+    width: 22px; height: 22px; border-radius: 7px; background: var(--ink); color: #fff;
+    font-family: "SF Mono", "Consolas", monospace; font-size: 12px; font-weight: 900;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sec-badge {
+    font-size: 11.5px; font-weight: 700; color: var(--green);
+    background: var(--green-soft); padding: 2px 8px; border-radius: 6px;
+  }
+
+  /* 30字黄金标题预览 */
+  .title-preview {
+    background: var(--bg); border-left: 3px solid var(--green);
+    padding: 8px 11px; border-radius: 0 8px 8px 0;
+    font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 10px;
+  }
+  .title-preview small { display: block; font-size: 11px; font-weight: 600; color: var(--ink-muted); margin-bottom: 2px; }
+
+  .copy-textarea {
+    width: 100%; height: 126px;
+    background: var(--bg); color: var(--ink-sub);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px; line-height: 1.55;
+    font-family: inherit; resize: none;
+  }
+
+  /* 主行动大按钮 */
+  .btn-primary {
+    width: 100%; border: none; border-radius: 12px; padding: 14px 16px;
+    font-size: 15.5px; font-weight: 900; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.12s ease, opacity 0.15s ease;
+  }
+  .btn-primary:active { transform: scale(0.985); }
+  .btn-green { background: var(--green); color: #FFFFFF; box-shadow: 0 6px 16px rgba(22, 104, 70, 0.24); margin-bottom: 10px; }
+  .btn-gold {
+    background: #1A1917; color: #FDE047; box-shadow: 0 6px 18px rgba(26, 25, 23, 0.22);
+    flex-direction: column; gap: 2px; padding: 14px 12px; margin-bottom: 12px;
+  }
+  .btn-gold small { font-size: 11.5px; font-weight: 600; color: #D6D1C4; }
+
+  /* 2x2 配图预览网格 */
+  .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .img-item {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 12px;
+    padding: 7px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .img-item.is-cover { border: 1.5px solid var(--ink); background: var(--surface-alt); }
+  .img-cap {
+    font-size: 12px; font-weight: 800; color: var(--ink);
+    display: flex; justify-content: space-between; align-items: center; padding: 0 2px;
+  }
+  .img-cap .order-tag {
+    font-family: "SF Mono", "Consolas", monospace; font-size: 11px;
+    padding: 1px 6px; border-radius: 5px; background: var(--line); color: var(--ink);
+  }
+  .img-item.is-cover .order-tag { background: var(--ink); color: #FDE047; }
+  .img-thumb-wrap {
+    position: relative; border-radius: 8px; overflow: hidden;
+    aspect-ratio: 3 / 4; background: #E5E0D5; cursor: pointer;
+  }
+  .img-thumb-wrap img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    -webkit-touch-callout: default !important;
+  }
+  .img-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .mini-btn {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    font-size: 11.5px; font-weight: 800; padding: 7px 4px; border-radius: 8px; cursor: pointer;
+  }
+  .mini-btn.save { background: var(--green-soft); color: var(--green); border-color: #BDDCC9; }
+
+  /* Tab 2：聊单话术与实时一口价填词器 */
+  .filter-bar {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .f-chip {
+    flex-shrink: 0; border: 1px solid var(--line); background: var(--surface); color: var(--ink-sub);
+    font-size: 12.5px; font-weight: 700; padding: 7px 13px; border-radius: 999px; cursor: pointer;
+  }
+  .f-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .builder-box {
+    background: var(--amber-soft); border: 1px solid #EBD3A7; border-radius: 14px;
+    padding: 13px 14px; margin-bottom: 12px;
+  }
+  .builder-title { font-size: 14px; font-weight: 900; color: var(--amber); margin-bottom: 8px; }
+  .builder-inputs { display: grid; grid-template-columns: 1.4fr 0.8fr 0.8fr; gap: 7px; margin-bottom: 8px; }
+  .b-input {
+    width: 100%; padding: 8px 9px; border-radius: 8px; border: 1px solid #DFC492;
+    background: #fff; font-size: 13px; color: var(--ink); font-family: inherit;
+  }
+  .builder-preview {
+    background: #fff; border-radius: 10px; padding: 10px 11px;
+    font-size: 13.5px; color: var(--ink); line-height: 1.55; margin-bottom: 8px;
+    border: 1px solid #EAD7B1;
+  }
+
+  .chat-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 15px;
+    padding: 14px; margin-bottom: 11px; box-shadow: var(--shadow-sm);
+  }
+  .chat-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 5px; }
+  .chat-name { font-size: 14.5px; font-weight: 900; color: var(--ink); }
+  .chat-cat {
+    flex-shrink: 0; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 5px;
+    background: var(--surface-alt); color: var(--ink-sub);
+  }
+  .chat-hint { font-size: 12px; color: var(--ink-muted); margin-bottom: 9px; }
+  .chat-body {
+    background: var(--bg); border-radius: 10px; padding: 10px 11px;
+    font-size: 13.5px; color: var(--ink); line-height: 1.6; margin-bottom: 10px;
+    white-space: pre-wrap;
+  }
+  .chat-copy-btn {
+    width: 100%; border: none; border-radius: 10px; padding: 11px;
+    background: var(--ink); color: #FFFFFF; font-size: 14px; font-weight: 800; cursor: pointer;
+  }
+  .chat-copy-btn:active { opacity: 0.85; }
+
+  /* Tab 3：违禁词自检器 + 项目编号速查 + 防扫脸铁律 */
+  .tool-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: 15px; margin-bottom: 13px; box-shadow: var(--shadow-sm);
+  }
+  .tool-h { font-size: 15.5px; font-weight: 900; color: var(--ink); margin-bottom: 4px; }
+  .tool-sub { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 10px; }
+  .check-textarea {
+    width: 100%; height: 96px; padding: 10px 12px; border-radius: 10px;
+    border: 1.5px solid var(--line); background: var(--bg);
+    font-size: 13.5px; color: var(--ink); font-family: inherit;
+  }
+  .check-textarea:focus { outline: none; border-color: var(--ink); background: #fff; }
+  .scan-result {
+    margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+    font-size: 13px; line-height: 1.55; font-weight: 600;
+  }
+  .scan-ok { background: var(--green-soft); color: var(--green); }
+  .scan-bad { background: var(--red-soft); color: var(--red); }
+  .hit-chip {
+    display: inline-block; background: var(--red); color: #fff;
+    padding: 1px 7px; border-radius: 5px; font-size: 12px; font-weight: 800; margin: 2px 4px 2px 0;
+  }
+
+  .proj-search {
+    width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--bg); font-size: 13.5px; margin-bottom: 10px; font-family: inherit;
+  }
+  .proj-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 2px; border-bottom: 1px dashed var(--line); font-size: 13.5px;
+  }
+  .proj-row:last-child { border-bottom: none; }
+  .proj-code {
+    font-family: "SF Mono", "Consolas", monospace; font-weight: 900; font-size: 13px;
+    padding: 2px 7px; border-radius: 6px; flex-shrink: 0;
+  }
+  .proj-code.a { background: var(--amber-soft); color: var(--amber); }
+  .proj-code.b { background: var(--green-soft); color: var(--green); }
+  .proj-name { flex: 1; font-weight: 600; color: var(--ink); }
+  .proj-send-btn {
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    font-size: 11.5px; font-weight: 800; padding: 5px 9px; border-radius: 7px; cursor: pointer; flex-shrink: 0;
+  }
+
+  .rule-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .rule-list li {
+    font-size: 13px; color: var(--ink-sub); line-height: 1.55;
+    padding-left: 24px; position: relative;
+  }
+  .rule-list li b { color: var(--ink); }
+  .rule-list li::before {
+    content: attr(data-n); position: absolute; left: 0; top: 1px;
+    font-family: "SF Mono", "Consolas", monospace; font-weight: 900; font-size: 12px; color: var(--red);
+  }
+
+  /* 底部固定 iOS 风格导航栏 */
+  .bottom-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+    display: flex; justify-content: center;
+  }
+  .nav-inner {
+    width: 100%; max-width: 680px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .nav-btn {
+    border: none; background: transparent; color: var(--ink-muted);
+    padding: 7px 4px; border-radius: 12px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 12px; font-weight: 800; transition: all 0.15s ease;
+  }
+  .nav-btn .ni { font-size: 18px; line-height: 1.1; }
+  .nav-btn.active { background: var(--ink); color: #FFFFFF; }
+
+  /* 全屏高清验图/长按存图灯箱 */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(15, 14, 12, 0.96); z-index: 999;
+    display: none; flex-direction: column; justify-content: space-between;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+  }
+  .lightbox.open { display: flex; }
+  .lb-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    color: #fff; font-size: 14px; font-weight: 800;
+  }
+  .lb-tip { font-size: 12px; color: #FDE047; margin-top: 3px; font-weight: 600; }
+  .lb-stage {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 12px 0; overflow: hidden;
+  }
+  .lb-stage img {
+    max-width: 100%; max-height: 74vh; border-radius: 12px;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.65);
+    -webkit-touch-callout: default !important;
+  }
+  .lb-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .lb-btn {
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1);
+    color: #fff; font-size: 14px; font-weight: 800; padding: 13px 8px; border-radius: 11px; cursor: pointer;
+  }
+  .lb-btn.close { background: var(--red); border-color: var(--red); }
+
+  /* 顶部悬浮轻提示 Toast */
+  .toast {
+    position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%) translateY(-90px);
+    background: var(--ink); color: #FDE047;
+    font-size: 14px; font-weight: 800; padding: 11px 20px; border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.28); z-index: 1000;
+    transition: transform 0.22s ease; white-space: nowrap; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast">已复制到剪贴板</div>
+
+<!-- 全屏验图/长按存图灯箱 -->
+<div id="lightbox" class="lightbox">
+  <div class="lb-bar">
+    <div>
+      <div id="lbName">图片预览</div>
+      <div class="lb-tip">可长按大图存储到「照片」，或点下方切换查看</div>
+    </div>
+  </div>
+  <div class="lb-stage"><img id="lbImg" src="" alt="预览"></div>
+  <div class="lb-controls">
+    <button class="lb-btn" onclick="lbStep(-1)">上一张</button>
+    <button class="lb-btn" onclick="lbStep(1)">下一张</button>
+    <button class="lb-btn close" onclick="closeLb()">关闭</button>
+  </div>
+</div>
+
+<!-- 顶部品牌指挥栏 -->
+<header class="app-header">
+  <div>
+    <div class="brand-kicker">XIANYU OPS STUDIO · V6</div>
+    <div class="brand-title">良研代码小铺 · 运营台</div>
+  </div>
+  <div class="header-right">
+    <div class="status-text">防扫脸保护已锁死</div>
+    <a class="freebies-link" href="freebies.html" target="_blank">65家免费AI额度 ↗</a>
+  </div>
+</header>
+
+<!-- 电脑端扫码框（手机自动隐藏） -->
+<div class="qr-card">
+  <img src="qrcode_iphone.png?v=14" alt="iPhone扫码直达">
+  <div class="qr-info">
+    <b>用 iPhone Safari 扫码并「添加到主屏幕」，像原生 App 一样天天用</b>
+    <p>永久云端地址（电脑关机也能秒开）：<a href="https://yanspros.github.io/xianyu/">https://yanspros.github.io/xianyu/</a></p>
+  </div>
+</div>
+
+<!-- 每日防扫脸 30 秒打卡清单 -->
+<section class="daily-card">
+  <div class="daily-head" onclick="toggleDaily()">
+    <div class="daily-head-l">
+      <span class="daily-title">每日上架前 30 秒安全打卡</span>
+      <span class="daily-prog" id="dailyProg">0/3</span>
+    </div>
+    <span class="daily-toggle" id="dailyArrow">收起</span>
+  </div>
+  <div class="daily-list" id="dailyList">
+    <div class="check-item" data-key="vpn" onclick="toggleCheck('vpn', this)">
+      <span class="check-box"></span>
+      <span>已关闭手机 Shadowrocket VPN（切回国内原生网络）</span>
+    </div>
+    <div class="check-item" data-key="msg" onclick="toggleCheck('msg', this)">
+      <span class="check-box"></span>
+      <span>已清零未读消息红点（原积压201条）+ 文字回小刀拉回复率</span>
+    </div>
+    <div class="check-item" data-key="exp" onclick="toggleCheck('exp', this)">
+      <span class="check-box"></span>
+      <span>已点闲鱼「我的 ➔ 查看完整数据」白领 +10 曝光</span>
+    </div>
+    <div class="check-item" data-key="polish" onclick="toggleCheck('polish', this)">
+      <span class="check-box"></span>
+      <span>已按 11:45 / 19:30 双高峰错峰点「免费擦亮」</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 面板 1：改商品（Day 1 ~ Day 4） ==================== -->
+<main class="pane active" id="pane0">
+  <div class="day-strip" id="dayStrip"></div>
+  <div class="listing-card" id="listingStage"></div>
+</main>
+
+<!-- ==================== 面板 2：秒回客户 & 一口价填词器 ==================== -->
+<main class="pane" id="pane1">
+  <!-- 报错急救一口价实时拼装器 -->
+  <div class="builder-box">
+    <div class="builder-title">报错急救 · 一口价话术秒填器（填完直接复制发客户）</div>
+    <div class="builder-inputs">
+      <input class="b-input" id="errName" type="text" placeholder="报错词，如 CUDA冲突" oninput="updateRescueBuilder()">
+      <input class="b-input" id="errPrice" type="number" value="40" placeholder="总价(元)" oninput="updateRescueBuilder()">
+      <input class="b-input" id="errMins" type="text" value="20分钟" placeholder="估时" oninput="updateRescueBuilder()">
+    </div>
+    <div class="builder-preview" id="rescuePreview"></div>
+    <button class="chat-copy-btn" style="background:var(--amber);" onclick="copyRaw(document.getElementById('rescuePreview').innerText, this)">一键复制这条定制一口价话术</button>
+  </div>
+
+  <!-- 场景筛选条 -->
+  <div class="filter-bar" id="chatFilters">
+    <button class="f-chip active" onclick="filterChats('all', this)">全部 (6)</button>
+    <button class="f-chip" onclick="filterChats('lead', this)">破冰 / 小刀</button>
+    <button class="f-chip" onclick="filterChats('tech', this)">救急 / 研究生AI</button>
+    <button class="f-chip" onclick="filterChats('close', this)">开工确认 / 交接</button>
+  </div>
+
+  <div id="chatList"></div>
+</main>
+
+<!-- ==================== 面板 3：违禁词检测 / 项目目录 / 防扫脸铁律 ==================== -->
+<main class="pane" id="pane2">
+  <!-- 58 屏蔽词 & 导流词实时扫描仪 -->
+  <div class="tool-card">
+    <div class="tool-h">58 屏蔽词 & 禁言雷区实时自检</div>
+    <div class="tool-sub">准备手打标题、正文或回客户前贴进来，0.1 秒揪出 0 召回词与导流禁言词</div>
+    <textarea class="check-textarea" id="scanInput" placeholder="粘贴你想发的文案或聊天回复试试，例如：接计算机毕设深度学习微信小程序远程调试加微信..." oninput="runScanner()"></textarea>
+    <div id="scanOut" class="scan-result scan-ok">输入文字即可实时检测（覆盖 58 个 0 召回屏蔽词 + 站外导流 + 广告法高危词）</div>
+  </div>
+
+  <!-- A1~A7 / B1~B6 项目目录速查 -->
+  <div class="tool-card">
+    <div class="tool-h">现成项目速查表（A1~A7 / B1~B6）</div>
+    <div class="tool-sub">客户问“有没有做过某类题目”时，秒搜并一键复制回复编号</div>
+    <input class="proj-search" id="projSearch" type="text" placeholder="输入关键词搜索，如：房价 / 社团 / 股票 / 小程序..." oninput="renderProjects()">
+    <div id="projList"></div>
+  </div>
+
+  <!-- 流量分析专家：2026 免费获量发布时刻表 & 14天节奏 -->
+  <div class="tool-card">
+    <div class="tool-h">流量专家诊断 · 2026 黄金获量节奏</div>
+    <div class="tool-sub">实测你的想要→成交率高达 20%，解决前端断流立刻出单！</div>
+    <ul class="rule-list">
+      <li data-n="01"><b>今晚先解冻沉睡号</b>：立刻清空积压的 <b>201 条未读红点</b>，文字回复高权重链 ①②⑤ 的小刀（绝不改标价）。</li>
+      <li data-n="02"><b>卡准双峰擦亮与发布</b>：11:45 擦亮 ③④⑥⑦；19:30 擦亮主力 ①②⑤；<b>每天 19:45–20:15</b> 改 1 条或发新链（撞 20:00–23:30 赶 DDL 峰）。</li>
+      <li data-n="03"><b>第 2 格挂 12 秒真机短视频</b>：手机怼拍电脑红字变绿/YOLO检测/Vue后台 12 秒（0 露脸无水印），想要率直接翻倍。</li>
+      <li data-n="04"><b>Day 6 &amp; Day 9 激活 2 条草稿发新链</b>：草稿 1 发 ¥9.9 报错救急（定位 <b>北京·海淀区</b> 吃高校同城+72h新链冷启动）；草稿 2 发 ¥50 计算机课设/小程序空白词补位。</li>
+    </ul>
+  </div>
+
+  <!-- 母亲实名防扫脸 5 条红线备忘 -->
+  <div class="tool-card">
+    <div class="tool-h">母亲身份证实名 · 防扫脸 5 条死红线</div>
+    <div class="tool-sub">每次操作闲鱼前牢记，稳保账号绝不惊动老人扫脸</div>
+    <ul class="rule-list">
+      <li data-n="01"><b>绝不点商业开关</b>：不点「开启留资卡」「设置佣金」「鱼小铺进阶认证」。</li>
+      <li data-n="02"><b>绝不登电脑端、不挂 VPN</b>：只在绑定已久的 iPhone 上关闭 Shadowrocket 后操作。</li>
+      <li data-n="03"><b>老链分文不改价、每天最多改 1 条</b>：原价格和闲鱼币保持不动，同一链接 7 天不重改。</li>
+      <li data-n="04"><b>误弹扫脸立刻左上角关闭</b>：放弃当次操作账号依然安全，绝对不用自己的脸去扫。</li>
+      <li data-n="05"><b>私聊绝对不提微信 / QQ / 手机号</b>：拍单后仅收常用邮箱与向日葵/ToDesk 识别码（遇拦截让买家把 @ 改空格或发截图）。</li>
+    </ul>
+  </div>
+</main>
+
+<!-- 底部固定 iOS 导航栏 -->
+<nav class="bottom-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="switchPane(0, this)">
+      <span class="ni">①</span><span>改商品</span>
+    </button>
+    <button class="nav-btn" onclick="switchPane(1, this)">
+      <span class="ni">②</span><span>回客户</span>
+    </button>
+    <button class="nav-btn" onclick="switchPane(2, this)">
+      <span class="ni">③</span><span>查词 / 工具</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+const VER = "?v=15";
+
+const LISTINGS = [
+  {
+    dayShort: "Day 1",
+    daySub: "Python数据",
+    track: "变现轨 · Python数据分析与预测",
+    trackClass: "track-money",
+    target: "python代做服务",
+    priceLock: "价格保持 ¥20 分文不动",
+    title30: "python代做服务 数据分析 数据预测模型 数据可视化大屏",
+    copy: `python代做服务 数据分析 数据预测模型 数据可视化大屏
+Django系统 | Flask系统 | 风险预测 | 房价预测 | 股票预测 | 代码跑通
+
+平时自己一直做 Python 数据建模和可视化开发，个人亲写不转包。
+
+很多同学卡在这两步：网上下来的代码一换自己的数据集就满屏报错；或者好不容易跑出结果，只有黑框里几行数字，缺一套干净好看的预测曲线、评估表和可视化大屏。
+
+手头整理了几套自己实跑通的数据与预测案例（报编号先看真实图表，再按你题目换数据微调）：
+A1 银行客户流失预测与多特征评估系统
+A2 网购差评风险预测与情感可视化建模
+A3 昆明二手房价格预测与回归分析看板
+A4 贵阳二手房数据清洗与多维图表分析
+A5 股票时序预测与趋势折线对比建模
+A6 贷款违约风险预测与评分卡可视化
+A7 保险理赔异常检测与数据大屏系统
+（均支持按需封装 Flask / Django 交互页面与可视化大屏）
+
+【参考预算与工期，心里先有底】
+- 数据清洗、画图表或修脚本：30~80 元，当天或次日出结果；
+- 现成方向换你自己的数据微调出图：150~350 元，1~2 天先出真实运行截图核对；
+- 全新多模型对比与数据大屏定制：按页面与模型数量报一口价，初稿看图满意再发完整源码。
+
+交付后在线联机手把手帮你在自己电脑配通环境跑起来，零基础跟着点鼠标就行。纯代码与数据分析开发，不接文稿类业务；按平台虚拟定制规则，确认清单开工后不支持无故退单，拍前先对齐需求。
+
+点右下角【我想要】发下题目要求，或直接回个编号（如“看A1”），先免费发真实运行图表给你参考！`,
+    imgs: [
+      { order: "图1 封面", name: "自然光手写实拍", file: "首图4_数据分析与系统开发款.png", saveName: "1_封面主图.png", cover: true },
+      { order: "图2 目录", name: "2.5D拼贴·A1-A7", file: "详情图4_26个现成项目演示总表.png", saveName: "2_项目目录.png" },
+      { order: "图3 对比", name: "2.5D拼贴·对比", file: "详情图2_对比建立信任.png", saveName: "3_靠谱对比图.png" },
+      { order: "图4 流程", name: "2.5D拼贴·交付", file: "详情图3_交付清单与流程.png", saveName: "4_交付清单图.png" }
+    ]
+  },
+  {
+    dayShort: "Day 2",
+    daySub: "报错急救",
+    track: "引流轨 · 低价报错救火与环境配通",
+    trackClass: "track-rescue",
+    target: "软件开发代码复现服务",
+    priceLock: "价格保持 ¥10 分文不动",
+    title30: "代码报错解决 代码跑通 代码修改 环境配置 项目部署运行调试",
+    copy: `代码报错解决 代码跑通 代码修改 环境配置 项目部署运行调试
+Python报错 | PyTorch环境 | YOLO配置 | SpringBoot部署 | Vue前后端联调
+
+平时写项目排错见得多，专门帮同学救急修代码，个人直接接手排查、上手定位快。
+
+别处买来的压缩包配了两天还是满屏红字、GitHub 源码依赖打架、CUDA/JDK/MySQL 版本死活对不上，或者快交差了只想改几个页面字段、补个小功能——都可以先发我看看。
+
+【主要接这些急单救火】
+- 环境配通：Anaconda / Python / PyTorch / YOLO / CUDA / JDK / Maven / Node / MySQL 一站配顺；
+- 报错排雷：缺包冲突、路径报错、数据库连不上、端口冲突、前后端跨域 404/500 快速修复；
+- 项目跑通与微调：SpringBoot+Vue、Django/Flask 联调，以及在原代码上改字段、换数据集、补小功能；
+- 顺带讲清：修通后告诉你具体改了哪几行、怎么一键启动，演示时心里踏实。
+
+【先看报错报一口价，绝不坐地起价】
+- 发红字报错截图过来，我先免费看一眼卡在哪，确认能修再报一口价；
+- 单点环境或常见报错一般 20~60 元，复杂前后端联调/加模块按实际工作量透明报死价；
+- 急单尽量当晚在线联机排查，在你电脑上亲眼跑出正常界面才算完，修不好分文不收！
+
+纯代码调试与技术修改，不接文稿类业务；拍前先发报错截图对齐范围。别自己通宵硬扛了，点右下角【我想要】直接把红字报错图甩过来！`,
+    imgs: [
+      { order: "图1 封面", name: "自然光手写实拍", file: "首图3_补锅救急_程序代改款.png", saveName: "1_封面主图.png", cover: true },
+      { order: "图2 专属", name: "3D微距·红绿修复", file: "详情图_报错急救对比.png", saveName: "2_报错急救对比.png" },
+      { order: "图3 对比", name: "2.5D拼贴·对比", file: "详情图2_对比建立信任.png", saveName: "3_靠谱对比图.png" },
+      { order: "图4 流程", name: "2.5D拼贴·交付", file: "详情图3_交付清单与流程.png", saveName: "4_交付清单图.png" }
+    ]
+  },
+  {
+    dayShort: "Day 3",
+    daySub: "YOLO/AI",
+    track: "高客单轨 · PyTorch / YOLO 算法改进",
+    trackClass: "track-ai",
+    target: "软件开发，代码优化与模型训练",
+    priceLock: "价格保持 ¥18.8 分文不动",
+    title30: "pytorch算法复现 yolo目标检测 模型训练 代码优化",
+    copy: `pytorch算法复现 yolo目标检测 模型训练 代码优化
+算法改进 | 图像识别 | 图像分类 | 模型调优 | 知识图谱 | 大模型
+
+专注 PyTorch 与视觉/检测方向模型复现与结构改进，自有 24G+ 高显存独显 GPU 真机跑实验，拒绝拿官方预训练权重跑张图糊弄人。
+
+做算法实验最怕两件事：开源仓库依赖打架、显存爆掉一周跑不起基线；或者找人改模型拿不到真实训练日志和消融实验数据，一问细节就露馅。
+
+【实打实可落地的算法改进与验收证据】
+- YOLO (v5 / v8 / v11) 结构定制：主干轻量化替换（MobileNet / ShuffleNet / GhostNet）、注意力嵌入（CBAM / SE / EMA / ECA）、颈部特征融合（BiFPN / Slim-Neck）、损失函数替换（WIoU / SIoU / MPDIoU）；
+- 模型压缩与对比：通道剪枝、知识蒸馏及多组对照消融实验设计；
+- 真实实验证据交付：真机跑完完整 epoch，提供终端训练日志、原始 results.png（Loss / mAP50 / mAP50-95 曲线）、PR 曲线、混淆矩阵及完整消融实验对比表；
+- 交互演示包装：按需封装 Flask / PyQt / Vue 实时检测演示界面（支持图片/视频/摄像头标框）。
+
+【工期与报价参考】
+- 环境配通与基线跑通：50~150 元，1 天内推进；
+- 结构改进 + 自有数据集完整训练与消融实验：按数据集体量、改进模块数与算力时长报一口价，一般 2~5 天先发真实 results.png 曲线和改写模块片段核对，满意再发全套权重源码并协助本机配通推理环境。
+
+纯算法工程开发与实验调试，不接文稿类业务；按平台虚拟定制规则，确认指标开工后不支持无故退单。点右下角【我想要】直接发你的基线 mAP、数据集规模或想做的改进方向，免费帮你理清消融实验方案！`,
+    imgs: [
+      { order: "图1 封面", name: "自然光手写实拍", file: "首图2_AI与深度学习专款.png", saveName: "1_封面主图.png", cover: true },
+      { order: "图2 专属", name: "3D微距·曲线消融", file: "详情图_算法实验交付证据.png", saveName: "2_算法消融表.png" },
+      { order: "图3 对比", name: "2.5D拼贴·对比", file: "详情图2_对比建立信任.png", saveName: "3_靠谱对比图.png" },
+      { order: "图4 流程", name: "2.5D拼贴·交付", file: "详情图3_交付清单与流程.png", saveName: "4_交付清单图.png" }
+    ]
+  },
+  {
+    dayShort: "Day 4",
+    daySub: "Vue全栈",
+    track: "变现轨 · SpringBoot + Vue 全栈主力",
+    trackClass: "track-money",
+    target: "计算机专业毕业，大学生计算机项目设计",
+    priceLock: "老链锁死 ¥80+20000闲鱼币 一分钱别改！",
+    title30: "计算机专业毕业 计算机课设 springboot vue系统",
+    copy: `计算机专业毕业 计算机课设 springboot vue系统
+软件开发 | 管理系统 | Python项目 | 小程序开发 | 代码编写 | 代码跑通
+
+（提示：主页标价和闲鱼币是老链接保留展示，千万别直接拍！私聊按需求估价后拍专属链接，现成改题一般两三百起）
+
+平时自己做全栈和 Python 开发，个人亲写接单、不经中介转手。
+
+如果你正卡在选题没头绪、前后端接口老报 500 联调不通，又怕买到跟同学撞车的陈旧模板，可以先看看我手头实跑通的几个核心骨架——均可按你的具体题目改表结构、换页面主题、增减业务模块，避免雷同。
+
+【核心可看样方向（私聊报编号先看真实界面截图）】
+B1 校园社团管理与协同推荐系统 (SpringBoot+Vue3)
+B2 特色商品线上选购与订单全栈平台 (SpringBoot+Vue)
+B3 助农农产品销售与数据大屏系统 (Java+Vue+ECharts)
+B4 视频点播与课程管理全栈平台 (SpringBoot+MySQL)
+B5 城市公交线路与站点信息管理系统 (全栈前后端)
+B6 约球社交小程序开发与后台管理系统 (小程序+接口)
+（同步支持 Python 数据预测与可视化大屏 A1~A7 方向，详见图2目录）
+
+【参考预算与交付节奏】
+- 现成骨架按你的题目换字段、改页面主题微调：200~450 元，1~3 天先发真实运行截图核对；
+- 全新功能定制：按页面数和接口复杂度报一口价，分阶段看实跑效果再发完整源码、SQL 脚本与架构图/ER图参考；
+- 交付后在线联机手把手帮你在自己电脑配通环境跑起来，附核心代码逻辑串讲。
+
+纯软件工程开发与技术辅导，不接文稿类业务；按平台虚拟定制规则，确认功能清单开工后不支持无故退单。点右下角【我想要】直接发题目或编号（如“看B1”），免费发真机运行截图给你参考！`,
+    imgs: [
+      { order: "图1 封面", name: "自然光手写实拍", file: "首图1_通用主力款_能跑通再交付.png", saveName: "1_封面主图.png", cover: true },
+      { order: "图2 目录", name: "2.5D拼贴·B1-B6", file: "详情图4_26个现成项目演示总表.png", saveName: "2_项目目录.png" },
+      { order: "图3 对比", name: "2.5D拼贴·对比", file: "详情图2_对比建立信任.png", saveName: "3_靠谱对比图.png" },
+      { order: "图4 流程", name: "2.5D拼贴·交付", file: "详情图3_交付清单与流程.png", saveName: "4_交付清单图.png" }
+    ]
+  }
+];
+
+const CHATS = [
+  {
+    cat: "lead", catLabel: "激活小刀",
+    name: "① 回复「小刀」买家（自然消化闲鱼币）",
+    hint: "点开消息里砍价的人，55字真人短句立刻拉活店铺回复率",
+    body: "在的，主页标价和闲鱼币是老链接展示价，实际看需求定，简单修错几十块、现成改题也就两三百。你把要求或报错图发我看看，我给你报个实在价，顺便发跑通截图参考。"
+  },
+  {
+    cat: "lead", catLabel: "新客破冰",
+    name: "② 普通新客破冰首句（零压力不问户口）",
+    hint: "新买家问“在吗/能做吗”时直接发这句",
+    body: "在的同学，直接把题目要求、报错图或者看中的编号（比如A1/B1）发过来就行，顺便说下大概啥时候要，我先免费帮你看下难度发真图参考。"
+  },
+  {
+    cat: "tech", catLabel: "救急锁单",
+    name: "③ 报错救急一口价锁单（也可用上方秒填器）",
+    hint: "直接报死总价和拍单份数，彻底打消坐地起价顾虑",
+    body: "报错看了，是【填真实报错如 ModuleNotFoundError / MySQL 1045】，大概二三十分钟能修通。一口价【XX】元（拍【X】份10元链接就行），修不好直接全额退，方便的话发下 ToDesk 码马上连。"
+  },
+  {
+    cat: "tech", catLabel: "高客单AI",
+    name: "④ 科班/研究生 AI 算法专业追问（高预算专属）",
+    hint: "遇到问 YOLO / PyTorch 改进的买家，一句话立住行家人设",
+    body: "可以接，我本地有 24G 独显真机跑。方便说下你现在基线跑的是哪个版本、数据集大概多少张、目前 mAP50 卡在哪块（小目标漏检还是参数量偏大）吗？我先给你理一版消融改进思路和工期。"
+  },
+  {
+    cat: "close", catLabel: "防白嫖护盾",
+    name: "⑤ 开工前温和确认（柔化落地第107条）",
+    hint: "聊好功能和一口价后发，双方踏实零扯皮",
+    body: "功能清单咱们对齐了：1.【核心功能】 2.【交付时间】。跑通后先发真实运行截图/曲线给你核对，满意再发源码并联机配通本机环境。提前说好按平台定制规则，确认开工后不接无故退单，清单没问题回个“确认”我就开写！"
+  },
+  {
+    cat: "close", catLabel: "安全交接",
+    name: "⑥ 拍单后安全发包 & 联机（0微信防禁言）",
+    hint: "若买家发邮箱被吞，让他把 @ 改空格或发截图即可",
+    body: "收到啦，直接在这把你的常用邮箱发我，我把完整工程包和运行说明发过去；电脑上装好向日葵或 ToDesk 后把识别码发我，我连上去手把手帮你配好跑起来，全程都在你眼前看着操作。"
+  }
+];
+
+const PROJECTS = [
+  { code: "A1", group: "a", name: "银行客户流失预测与多特征评估系统", kw: "python 金融 银行 客户流失 预测" },
+  { code: "A2", group: "a", name: "网购差评风险预测与情感可视化建模", kw: "python 电商 评论 情感 风险 预测" },
+  { code: "A3", group: "a", name: "昆明二手房价格预测与回归分析看板", kw: "python 房产 昆明 二手房 房价 回归" },
+  { code: "A4", group: "a", name: "贵阳二手房数据清洗与多维图表分析", kw: "python 房产 贵阳 二手房 清洗 图表" },
+  { code: "A5", group: "a", name: "股票时序预测与趋势折线对比建模", kw: "python 股票 时序 金融 预测 lstm" },
+  { code: "A6", group: "a", name: "贷款违约风险预测与评分卡可视化", kw: "python 贷款 违约 金融 风控 评分卡" },
+  { code: "A7", group: "a", name: "保险理赔异常检测与数据大屏系统", kw: "python 保险 异常检测 大屏" },
+  { code: "B1", group: "b", name: "校园社团管理与协同推荐系统 (SpringBoot+Vue3)", kw: "java springboot vue 社团 管理系统 推荐" },
+  { code: "B2", group: "b", name: "特色商品线上选购与订单全栈平台 (SpringBoot+Vue)", kw: "java springboot vue 商城 选购 订单 平台" },
+  { code: "B3", group: "b", name: "助农农产品销售与数据大屏系统 (Java+Vue+ECharts)", kw: "java vue 农产品 助农 销售 大屏 echarts" },
+  { code: "B4", group: "b", name: "视频点播与课程管理全栈平台 (SpringBoot+MySQL)", kw: "java springboot 视频 课程 教学 管理系统" },
+  { code: "B5", group: "b", name: "城市公交线路与站点信息管理系统 (全栈前后端)", kw: "java vue 公交 交通 线路 管理系统" },
+  { code: "B6", group: "b", name: "约球社交小程序开发与后台管理系统 (小程序+接口)", kw: "小程序 乒乓 约球 社交 后台" }
+];
+
+const BLOCKED_DICT = [
+  { w: "毕业设计", alt: "计算机专业毕业" }, { w: "毕设", alt: "计算机专业毕业 / b设" },
+  { w: "课程设计", alt: "计算机课设" }, { w: "大作业", alt: "程序设计 / 计算机课设" },
+  { w: "期末作业", alt: "计算机课设" }, { w: "实验报告", alt: "架构图 / 运行说明" },
+  { w: "实训报告", alt: "系统文档" }, { w: "深度学习", alt: "pytorch / 模型训练" },
+  { w: "机器学习", alt: "数据预测模型 / 算法复现" }, { w: "人工智能", alt: "pytorch / yolo / 大模型" },
+  { w: "神经网络", alt: "pytorch模型" }, { w: "强化学习", alt: "算法复现 / 模型优化" },
+  { w: "人脸识别", alt: "图像识别 / 目标检测" }, { w: "chatgpt", alt: "大模型 / deepseek" },
+  { w: "微信小程序", alt: "小程序开发（必须去掉微信二字）" }, { w: "微信", alt: "严禁！改用常用邮箱或ToDesk" },
+  { w: "vx", alt: "严禁导流词！" }, { w: "qq", alt: "严禁导流词！" }, { w: "加我", alt: "严禁导流词！" },
+  { w: "二维码", alt: "严禁导流词！" }, { w: "手机号", alt: "严禁导流词！" },
+  { w: "微博", alt: "社交评论情感分析" }, { w: "远程", alt: "在线联机协助 / 手把手配通" },
+  { w: "数据采集", alt: "数据分析 / 数据处理" }, { w: "爬虫", alt: "数据处理脚本" },
+  { w: "论文", alt: "彻底剥离论文！仅写代码开发" }, { w: "代写", alt: "代码编写 / 按需定制开发" },
+  { w: "开题", alt: "毕业选题参考" }, { w: "文献综述", alt: "严禁学术红线词" },
+  { w: "查重", alt: "严禁学术红线词" }, { w: "降重", alt: "严禁学术红线词" },
+  { w: "自动化", alt: "python脚本开发" }, { w: "c++", alt: "代码编写" }, { w: "c#", alt: "代码编写" },
+  { w: "包过", alt: "保证本机跑通" }, { w: "保过", alt: "保证本机跑通" },
+  { w: "100%", alt: "删除极限词" }, { w: "全网最低", alt: "透明实在价" },
+  { w: "永久售后", alt: "后续小报错随时协助" }, { w: "无限修改", alt: "按确认清单微调" }
+];
+
+let curDay = 0;
+let curChatFilter = "all";
+const blobCache = {};
+const TODAY_KEY = "xy_daily_" + new Date().toISOString().slice(0, 10);
+const DONE_DAYS_KEY = "xy_done_days_v6";
+
+function getDailyState() {
+  try { return JSON.parse(localStorage.getItem(TODAY_KEY) || "{}"); } catch { return {}; }
+}
+function getDoneDays() {
+  try { return JSON.parse(localStorage.getItem(DONE_DAYS_KEY) || "{}"); } catch { return {}; }
+}
+
+function initDailyChecks() {
+  const st = getDailyState();
+  let doneCount = 0;
+  document.querySelectorAll(".check-item").forEach(el => {
+    const k = el.dataset.key;
+    const ok = !!st[k];
+    el.classList.toggle("done", ok);
+    el.querySelector(".check-box").textContent = ok ? "✓" : "";
+    if (ok) doneCount++;
+  });
+  document.getElementById("dailyProg").textContent = `${doneCount}/4`;
+  if (doneCount === 4) {
+    document.getElementById("dailyList").classList.add("collapsed");
+    document.getElementById("dailyArrow").textContent = "已全清 · 展开";
+  }
+}
+
+function toggleCheck(key, el) {
+  const st = getDailyState();
+  st[key] = !st[key];
+  localStorage.setItem(TODAY_KEY, JSON.stringify(st));
+  initDailyChecks();
+  if (st[key]) showToast("安全检查已勾选");
+}
+
+function toggleDaily() {
+  const list = document.getElementById("dailyList");
+  const collapsed = list.classList.toggle("collapsed");
+  document.getElementById("dailyArrow").textContent = collapsed ? "展开" : "收起";
+}
+
+function renderDayStrip() {
+  const doneMap = getDoneDays();
+  document.getElementById("dayStrip").innerHTML = LISTINGS.map((it, i) => `
+    <div class="day-pill ${i === curDay ? 'active' : ''} ${doneMap[i] ? 'completed' : ''}" onclick="selectDay(${i})">
+      <div class="dp-top">${it.dayShort}</div>
+      <div class="dp-sub">${it.daySub}</div>
+    </div>
+  `).join("");
+}
+
+function toggleDayDone(idx) {
+  const m = getDoneDays();
+  m[idx] = !m[idx];
+  localStorage.setItem(DONE_DAYS_KEY, JSON.stringify(m));
+  renderDayStrip();
+  renderListing();
+  showToast(m[idx] ? `已标记 ${LISTINGS[idx].dayShort} 上架完成` : `已取消 ${LISTINGS[idx].dayShort} 完成标记`);
+}
+
+function renderListing() {
+  const it = LISTINGS[curDay];
+  const isDone = !!getDoneDays()[curDay];
+  const stage = document.getElementById("listingStage");
+  stage.innerHTML = `
+    <div class="lc-banner">
+      <div class="lc-meta-row">
+        <span class="track-tag ${it.trackClass}">${it.track}</span>
+        <button class="done-toggle-btn ${isDone ? 'is-done' : ''}" onclick="toggleDayDone(${curDay})">
+          ${isDone ? '✓ 已上架' : '标记已改'}
+        </button>
+      </div>
+      <div class="lc-target">去闲鱼找到《${it.target}》点编辑</div>
+      <div class="lc-price-lock">防扫脸红线：${it.priceLock}</div>
+    </div>
+
+    <div class="lc-section">
+      <div class="sec-head">
+        <div class="sec-label"><span class="sec-num">1</span>一键复制 V6 通关文案</div>
+        <span class="sec-badge">0 屏蔽词 · 已终审</span>
+      </div>
+      <div class="title-preview">
+        <small>首行黄金搜索标题（${it.title30.replace(/\s+/g,'').length}字 · 无逗号）：</small>
+        ${it.title30}
+      </div>
+      <button class="btn-primary btn-green" onclick="copyRaw(LISTINGS[${curDay}].copy, this)">一键复制【${it.dayShort}】完整新文案</button>
+      <textarea class="copy-textarea" readonly>${it.copy}</textarea>
+    </div>
+
+    <div class="lc-section">
+      <div class="sec-head">
+        <div class="sec-label"><span class="sec-num">2</span>一键存入 V6 反AI味 4 张神图</div>
+        <span class="sec-badge">98/100 肉眼过检</span>
+      </div>
+      <button class="btn-primary btn-gold" onclick="saveBatch(${curDay})">
+        <span>一键把这 4 张图同时存入手机相册</span>
+        <small>iOS Safari 弹窗后点「存储 4 张图像」即可（按 1→2→3→4 选图上传）</small>
+      </button>
+      <div class="img-grid">
+        ${it.imgs.map((im, idx) => `
+          <div class="img-item ${im.cover ? 'is-cover' : ''}">
+            <div class="img-cap">
+              <span class="order-tag">${im.order}</span>
+              <span style="color:var(--ink-sub);font-size:11px;">${im.name}</span>
+            </div>
+            <div class="img-thumb-wrap" onclick="openLb(${curDay}, ${idx})">
+              <img src="${im.file}${VER}" alt="${im.order}">
+            </div>
+            <div class="img-actions">
+              <button class="mini-btn" onclick="openLb(${curDay}, ${idx})">放大看</button>
+              <button class="mini-btn save" onclick="saveSingle(${curDay}, ${idx})">存这张</button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function selectDay(idx) {
+  curDay = idx;
+  renderDayStrip();
+  renderListing();
+}
+
+/* Tab 2：一口价实时填词器 + 话术筛选 */
+function updateRescueBuilder() {
+  const err = (document.getElementById("errName").value || "").trim() || "ModuleNotFoundError / 环境依赖冲突";
+  const price = Math.max(10, parseInt(document.getElementById("errPrice").value || "40", 10));
+  const mins = (document.getElementById("errMins").value || "").trim() || "二三十分钟";
+  const copies = Math.max(1, Math.round(price / 10));
+  const txt = `报错看了，是【${err}】，大概 ${mins} 能修通。一口价 ${price} 元（直接拍 ${copies} 份 10 元链接就行），修不好直接全额退，方便的话发下 ToDesk 码马上连。`;
+  document.getElementById("rescuePreview").innerText = txt;
+}
+
+function filterChats(cat, btn) {
+  curChatFilter = cat;
+  document.querySelectorAll(".f-chip").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  renderChats();
+}
+
+function renderChats() {
+  const list = CHATS.filter(c => curChatFilter === "all" || c.cat === curChatFilter);
+  document.getElementById("chatList").innerHTML = list.map((c, idx) => `
+    <div class="chat-card">
+      <div class="chat-top">
+        <div class="chat-name">${c.name}</div>
+        <span class="chat-cat">${c.catLabel}</span>
+      </div>
+      <div class="chat-hint">${c.hint}</div>
+      <div class="chat-body" id="cbody_${idx}">${c.body}</div>
+      <button class="chat-copy-btn" onclick="copyRaw(document.getElementById('cbody_${idx}').innerText, this)">一键复制这条话术</button>
+    </div>
+  `).join("");
+}
+
+/* Tab 3：58 屏蔽词实时自检 + 项目速查 */
+function runScanner() {
+  const val = (document.getElementById("scanInput").value || "").trim();
+  const out = document.getElementById("scanOut");
+  if (!val) {
+    out.className = "scan-result scan-ok";
+    out.innerHTML = "输入文字即可实时检测（覆盖 58 个 0 召回屏蔽词 + 站外导流 + 广告法高危词）";
+    return;
+  }
+  const low = val.toLowerCase();
+  const hits = BLOCKED_DICT.filter(item => low.includes(item.w));
+  if (hits.length === 0) {
+    out.className = "scan-result scan-ok";
+    out.innerHTML = `安全通过！未命中 58 屏蔽词与导流禁言雷区（当前字数：${val.length} 字）`;
+  } else {
+    out.className = "scan-result scan-bad";
+    out.innerHTML = `检测到 ${hits.length} 处高危词（建议立刻替换）：<br/>` +
+      hits.map(h => `<div style="margin-top:5px;"><span class="hit-chip">${h.w}</span> ➔ 建议改为：${h.alt}</div>`).join("");
+  }
+}
+
+function renderProjects() {
+  const q = (document.getElementById("projSearch").value || "").trim().toLowerCase();
+  const filtered = PROJECTS.filter(p => !q || (p.code + " " + p.name + " " + p.kw).toLowerCase().includes(q));
+  document.getElementById("projList").innerHTML = filtered.map(p => `
+    <div class="proj-row">
+      <span class="proj-code ${p.group}">${p.code}</span>
+      <span class="proj-name">${p.name}</span>
+      <button class="proj-send-btn" onclick="copyRaw('有的，手头刚好有【${p.code} ${p.name}】这套现成跑通的骨架，支持按你题目改字段和换数据防撞车，我先发两张真实运行截图给你看效果~', this)">复制推荐</button>
+    </div>
+  `).join("") || `<div style="font-size:13px;color:var(--ink-muted);padding:10px 0;">没有搜到现成编号，可以直接接定制开发！</div>`;
+}
+
+/* 底部导航切换 */
+function switchPane(idx, btn) {
+  document.querySelectorAll(".pane").forEach((p, i) => p.classList.toggle("active", i === idx));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* 图片预加载与 iOS Web Share 一键批量存图 */
+async function preloadAll() {
+  const files = new Set();
+  LISTINGS.forEach(l => l.imgs.forEach(im => files.add(im.file)));
+  for (const f of files) {
+    try { const r = await fetch(f + VER); blobCache[f] = await r.blob(); } catch {}
+  }
+}
+
+async function getFileObj(item) {
+  let blob = blobCache[item.file];
+  if (!blob) {
+    const r = await fetch(item.file + VER);
+    blob = await r.blob();
+    blobCache[item.file] = blob;
+  }
+  return new File([blob], item.saveName, { type: "image/png" });
+}
+
+async function saveBatch(dayIdx) {
+  const list = LISTINGS[dayIdx].imgs;
+  try {
+    const files = await Promise.all(list.map(getFileObj));
+    if (navigator.canShare && navigator.canShare({ files })) {
+      await navigator.share({ files, title: "闲鱼商品配图（共4张）" });
+      return;
+    }
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+  }
+  openLb(dayIdx, 0);
+}
+
+async function saveSingle(dayIdx, imgIdx) {
+  const item = LISTINGS[dayIdx].imgs[imgIdx];
+  try {
+    const file = await getFileObj(item);
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: item.order });
+      return;
+    }
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+  }
+  openLb(dayIdx, imgIdx);
+}
+
+/* 全屏高清灯箱 */
+let lbDay = 0, lbIdx = 0;
+function openLb(d, i) {
+  lbDay = d; lbIdx = i;
+  updateLb();
+  document.getElementById("lightbox").classList.add("open");
+}
+function updateLb() {
+  const im = LISTINGS[lbDay].imgs[lbIdx];
+  document.getElementById("lbName").textContent = `${im.order} · ${im.name} (${lbIdx + 1}/4)`;
+  document.getElementById("lbImg").src = im.file + VER;
+}
+function lbStep(delta) {
+  lbIdx = (lbIdx + delta + 4) % 4;
+  updateLb();
+}
+function closeLb() {
+  document.getElementById("lightbox").classList.remove("open");
+}
+
+/* 通用复制 + Toast */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function copyRaw(text, btn) {
+  const done = () => {
+    showToast("复制成功！直接去闲鱼粘贴即可");
+    if (btn) {
+      const old = btn.textContent;
+      btn.textContent = "✓ 已复制到剪贴板";
+      setTimeout(() => { btn.textContent = old; }, 1600);
+    }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, cb) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch {}
+  document.body.removeChild(ta);
+  cb();
+}
+
+initDailyChecks();
+renderDayStrip();
+renderListing();
+updateRescueBuilder();
+renderChats();
+renderProjects();
+preloadAll();
+</script>
+</body>
+</html>
